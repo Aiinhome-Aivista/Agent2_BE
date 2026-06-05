@@ -1,7 +1,4 @@
 chroma_db
-static
-venv
-.env
 uploads
-graph
-
+.env 
+static

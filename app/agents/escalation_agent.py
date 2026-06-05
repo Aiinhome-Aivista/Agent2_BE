@@ -78,10 +78,23 @@ class EscalationAgent(BaseAgent):
             "reason": extras.get("reason") or "Auto-escalated: complexity exceeds agent capability",
             "diagnostic": diagnostic,
             "attempted_actions": attempted,
-            "assigned_engineer": engineer,
+            "assigned_engineer": None,  # Will be updated by TicketManagementService if assigned via MS Teams logic
             "priority": incident.get("priority", "P3"),
             "status": "pending",
         })
+
+        # Do bandwidth-based assignment (which triggers MS Teams card)
+        from app.services.ticket_management_service import TicketManagementService
+        TicketManagementService.assign_ticket_based_on_bandwidth(incident["id"])
+
+        # Fetch assigned engineer to log properly
+        updated_incident = IncidentRepository.find_by_id(incident["id"])
+        assigned_engineer_id = updated_incident.get("assigned_to")
+        engineer = None
+        if assigned_engineer_id:
+            eng_data = UserRepository.find_by_id(assigned_engineer_id)
+            if eng_data:
+                engineer = eng_data["full_name"]
 
         self.record_step(
             incident_id=incident["id"],

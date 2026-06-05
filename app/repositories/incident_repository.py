@@ -21,12 +21,12 @@ class IncidentRepository:
                     INSERT INTO incidents (
                         id, subject, description, caller, caller_email, source,
                         status, priority, severity, category, subcategory,
-                        assigned_to, sla_deadline, sla_breached, auto_resolved,
+                        assigned_to, assignment_status, sla_deadline, sla_breached, auto_resolved,
                         confidence, tags, created_at, updated_at
                     ) VALUES (
                         %s, %s, %s, %s, %s, %s,
                         %s, %s, %s, %s, %s,
-                        %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s,
                         %s, %s, %s, %s
                     )
                     """,
@@ -43,6 +43,7 @@ class IncidentRepository:
                         payload.get("category") or "Uncategorised",
                         payload.get("subcategory"),
                         payload.get("assigned_to"),
+                        payload.get("assignment_status", "unassigned"),
                         payload.get("sla_deadline"),
                         payload.get("sla_breached", False),
                         payload.get("auto_resolved", False),
