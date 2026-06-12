@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     app_name: str = "Intelligent Incident Agent"
     app_env: str = "development"
     app_host: str = "0.0.0.0"
-    app_port: int = 3019
+    app_port: int = 3001
     debug: bool = True
     api_prefix: str = "/api/v1"
     frontend_url: str = "http://localhost:5173"

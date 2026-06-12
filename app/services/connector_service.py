@@ -28,13 +28,13 @@ from app.repositories.connector_repository import ConnectorRepository
 
 def _redirect_uri() -> str:
     """The OAuth callback URL configured on the provider's app settings."""
-    base = os.environ.get("APP_PUBLIC_BASE_URL", "https://122.163.121.176:3019").rstrip("/")
+    base = os.environ.get("APP_PUBLIC_BASE_URL", "https://122.163.121.176:3001").rstrip("/")
     return f"{base}/api/v1/connectors/oauth/callback"
 
 
 def _webhook_url(connector_id: str, webhook_secret: str) -> str:
     """The URL we register with providers for inbound webhooks."""
-    base = os.environ.get("WEBHOOK_PUBLIC_BASE_URL", os.environ.get("APP_PUBLIC_BASE_URL", "https://122.163.121.176:3019")).rstrip("/")
+    base = os.environ.get("WEBHOOK_PUBLIC_BASE_URL", os.environ.get("APP_PUBLIC_BASE_URL", "https://122.163.121.176:3001")).rstrip("/")
     return f"{base}/api/v1/connectors/{connector_id}/webhook?token={webhook_secret}"
 
 
