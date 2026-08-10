@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     app_name: str = "Intelligent Incident Agent"
     app_env: str = "development"
     app_host: str = "0.0.0.0"
-    app_port: int = 3001
+    app_port: int = 3019
     debug: bool = True
     api_prefix: str = "/api/v1"
     frontend_url: str = "http://localhost:5173"
@@ -52,8 +52,16 @@ class Settings(BaseSettings):
     # Connectors & Webhooks
     app_public_base_url: str = "https://122.163.121.176:3019"
     webhook_public_base_url: str = "https://122.163.121.176:3019"
+    scheduler_interval_minutes: int = 1
+    connector_default_poll_interval_sec: int = 120
 
-    
+    # Jira
+    jira_oauth_client_id: str | None = None
+    jira_oauth_client_secret: str | None = None
+    jira_url: str | None = None
+    jira_email: str | None = None
+    jira_api_token: str | None = None
+
     # ServiceNow
     servicenow_oauth_client_id: str = ""
     servicenow_oauth_client_secret: str = ""
@@ -78,18 +86,7 @@ class Settings(BaseSettings):
     mistral_local_model: str = "mistral:latest"
     mistral_enabled: bool = True
 
-    # SMTP (for high-priority escalation emails)
-    # SMTP (for high-priority escalation emails)
-    smtp_host: str = "smtp.gmail.com"
-    smtp_port: int = 587
-    smtp_username: str = "aiinhome62@gmail.com"
-    smtp_password: str = "ozhefykfihxxlbas"
-    smtp_from_address: str = "aiinhome62@gmail.com"
-    smtp_from_name: str = "Incident Agent"
-    smtp_use_tls: bool = True
 
-    # If set, escalations always copy this address
-    smtp_escalation_cc: str = ""
 
     # GraphDB (ArangoDB)
     arango_url: str = "http://157.173.221.226:8529"

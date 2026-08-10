@@ -14,7 +14,7 @@ from app.schemas import (
     PaginatedResponse,
 )
 from app.services import IncidentService
-from app.core.email_service import list_incident_emails
+
 from app.services.ai_troubleshooting_service import AITroubleshootingService
 from app.repositories.incident_repository import IncidentRepository
 
@@ -60,6 +60,80 @@ from pydantic import BaseModel
 
 class AssignmentResponsePayload(BaseModel):
     accept: bool
+
+@router.get("/admin-notifications", response_model=ApiResponse[List[Dict[str, Any]]])
+async def admin_notifications(
+    since: float = Query(0),
+    user: Dict[str, Any] = Depends(get_current_user),
+) -> ApiResponse[List[Dict[str, Any]]]:
+    if user.get("role") != "admin":
+        return ApiResponse(data=[])
+        
+    from app.db import get_db
+    import time
+    
+    # We will fetch recent assignment steps
+    with get_db() as conn:
+        with conn.cursor(dictionary=True) as cur:
+            # First get all active engineers to map IDs to names
+            cur.execute("SELECT id, full_name FROM users WHERE role = 'engineer'")
+            engineers = {row["id"]: row["full_name"] for row in cur.fetchall()}
+            
+            cur.execute(
+                """
+                SELECT s.incident_id, s.action, s.metadata, s.timestamp, i.subject
+                FROM incident_steps s
+                JOIN incidents i ON s.incident_id = i.id
+                WHERE s.action IN ('Assignment Accepted', 'Assignment Declined & Reassigned', 'Assignment Declined by All')
+                """
+            )
+            rows = cur.fetchall()
+            
+    notifications = []
+    # Filter by time manually if needed, but since timestamp in DB is datetime/string we will just do a simple filter
+    # Actually, timestamp in incident_steps is stored as varchar (ISO format) typically.
+    # Let's just return the last 10 notifications for simplicity and let the frontend filter by ID or we just return all recent.
+    # To do it properly, we should order by timestamp DESC limit 20.
+    
+    # Let's run a better query
+    with get_db() as conn:
+        with conn.cursor(dictionary=True) as cur:
+            cur.execute(
+                """
+                SELECT s.id, s.incident_id, s.action, s.metadata, s.timestamp, i.subject
+                FROM incident_steps s
+                JOIN incidents i ON s.incident_id = i.id
+                WHERE s.action IN ('Assignment Accepted', 'Assignment Declined & Reassigned', 'Assignment Declined by All')
+                ORDER BY s.id DESC LIMIT 20
+                """
+            )
+            rows = cur.fetchall()
+
+    for r in rows:
+        import json
+        meta = json.loads(r["metadata"]) if r["metadata"] and isinstance(r["metadata"], str) else r["metadata"] or {}
+        eng_name = "An engineer"
+        if r["action"] == "Assignment Accepted":
+            eng_id = meta.get("accepted_by")
+            eng_name = engineers.get(eng_id, eng_name)
+            msg = f"{eng_name} accepted ticket #{r['incident_id']}"
+        elif r["action"] == "Assignment Declined & Reassigned":
+            eng_id = meta.get("declined_by")
+            eng_name = engineers.get(eng_id, eng_name)
+            msg = f"{eng_name} declined ticket #{r['incident_id']}"
+        else:
+            msg = f"Ticket #{r['incident_id']} was declined by all engineers (Escalated)"
+            
+        notifications.append({
+            "id": r["id"],
+            "incident_id": r["incident_id"],
+            "subject": r["subject"],
+            "message": msg,
+            "action": r["action"],
+            "timestamp": r["timestamp"]
+        })
+        
+    return ApiResponse(data=notifications)
 
 @router.get("/pending-assignments", response_model=ApiResponse[List[Incident]])
 async def pending_assignments(
@@ -169,15 +243,7 @@ async def incident_timeline(
     incident = IncidentService.get(incident_id)
     return ApiResponse(data=[AgentStep.model_validate(s) for s in incident.get("steps", [])])
 
-@router.get("/{incident_id}/emails")
-async def incident_emails(
-    incident_id: str,
-    _: Dict[str, Any] = Depends(get_current_user),
-    ):
 
-    emails = list_incident_emails(incident_id)
-
-    return ApiResponse(data=emails)
 
 @router.post("/{incident_id}/generate-solution", response_model=ApiResponse[Dict[str, Any]])
 async def generate_ai_solution(

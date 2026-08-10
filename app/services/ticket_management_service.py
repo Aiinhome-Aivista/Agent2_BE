@@ -23,7 +23,7 @@ class TicketManagementService:
                     LEFT JOIN incidents i ON u.id IN (i.assigned_to, i.proposed_to) AND i.status NOT IN ('resolved', 'closed')
                     WHERE u.is_active = 1
                     GROUP BY u.id, u.full_name, u.email, u.teams_user_id, has_teams
-                    ORDER BY has_teams DESC, active_tickets ASC, u.created_at ASC
+                    ORDER BY active_tickets ASC, has_teams DESC, u.created_at ASC
                     """
                 )
                 return cur.fetchall()
@@ -52,6 +52,15 @@ class TicketManagementService:
         IncidentRepository.update(incident_id, {
             "proposed_to": best_engineer["id"],
             "assignment_status": "pending_approval"
+        })
+
+        # Add timeline step
+        IncidentRepository.add_step(incident_id, {
+            "agent": "System",
+            "action": "Assignment Proposed",
+            "output": f"Ticket proposed to {best_engineer['full_name']}.",
+            "type": "act",
+            "metadata": {"proposed_to": best_engineer["id"]}
         })
 
         # Ask via MS Teams Bot
@@ -96,6 +105,14 @@ class TicketManagementService:
                 "assignment_status": "pending_approval"
             })
             
+            IncidentRepository.add_step(incident_id, {
+                "agent": "System",
+                "action": "Assignment Proposed",
+                "output": f"Ticket proposed to {assigned_engineer['full_name']}.",
+                "type": "act",
+                "metadata": {"proposed_to": assigned_engineer["id"]}
+            })
+            
             # Increment the active_tickets in memory so the next ticket goes to someone else if balanced
             assigned_engineer["active_tickets"] += 1
             
@@ -117,14 +134,16 @@ class TicketManagementService:
             logger.info(f"[TicketManagementService] Assignment accepted for {incident_id}.")
             IncidentRepository.update(incident_id, {
                 "assignment_status": "assigned",
-                "assigned_to": incident.get("proposed_to")
+                "assigned_to": incident.get("proposed_to"),
+                "status": "accepted"
             })
             # Add timeline step
             IncidentRepository.add_step(incident_id, {
                 "agent": "System",
                 "action": "Assignment Accepted",
                 "output": f"Engineer accepted the assignment.",
-                "type": "act"
+                "type": "act",
+                "metadata": {"accepted_by": incident.get("proposed_to")}
             })
         else:
             declining_engineer_id = incident.get("proposed_to")
@@ -161,7 +180,11 @@ class TicketManagementService:
                     "agent": "System",
                     "action": "Assignment Declined & Reassigned",
                     "output": f"Engineer declined assignment. Reassigned to {next_engineer['full_name']}.",
-                    "type": "act"
+                    "type": "act",
+                    "metadata": {
+                        "declined_by": declining_engineer_id,
+                        "proposed_to": next_engineer["id"]
+                    }
                 })
                 logger.info(f"[TicketManagementService] Reassigned {incident_id} to {next_engineer['full_name']}")
             else:
@@ -174,6 +197,7 @@ class TicketManagementService:
                     "agent": "System",
                     "action": "Assignment Declined by All",
                     "output": f"All available engineers declined assignment. Ticket escalated to Team Lead.",
-                    "type": "act"
+                    "type": "act",
+                    "metadata": {"declined_by": declining_engineer_id}
                 })
                 logger.warning(f"[TicketManagementService] {incident_id} declined by all engineers. Escalated to lead.")

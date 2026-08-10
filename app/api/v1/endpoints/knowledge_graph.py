@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel
 
 from app.api.dependencies import get_current_user, require_admin
-from app.core.email_service import list_recent_emails
+
 from app.db import get_db
 from app.repositories.knowledge_graph_repository import KnowledgeGraphRepository
 from app.schemas import (
@@ -187,10 +187,4 @@ def list_analyses(
 
 
 # ------------------------------------------------------------- Email logs ---
-@router.get("/emails", response_model=ApiResponse[List[EmailLog]])
-def list_emails(
-    limit: int = Query(50, ge=1, le=500),
-    _user=Depends(require_admin),
-) -> ApiResponse[List[EmailLog]]:
-    rows = list_recent_emails(limit=limit)
-    return ApiResponse(data=[EmailLog.model_validate(r) for r in rows])
+

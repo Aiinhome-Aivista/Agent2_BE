@@ -25,9 +25,7 @@ from app.repositories.knowledge_graph_repository import KnowledgeGraphRepository
 
 from app.repositories.config_repository import ConfigRepository
 
-from app.repositories.escalation_tracker_repository import (
-    EscalationTrackerRepository,
-)
+
 
 from app.repositories.repos import (
     RunbookRepository,
@@ -43,7 +41,7 @@ __all__ = [
     "KnowledgeGraphRepository",
 
     "ConfigRepository",
-    "EscalationTrackerRepository",
+
 
     "RunbookRepository",
     "RunbookUploadRepository",

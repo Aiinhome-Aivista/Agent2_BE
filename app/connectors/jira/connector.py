@@ -131,25 +131,30 @@ class JiraConnector(BaseConnector):
             )
 
         # Basic Auth mode from frontend credentials
-        jira_email = (
-            creds.get("email")
-            or creds.get("username")
-            or settings.jira_email
-        )
+        jira_email = creds.get("email") or creds.get("username")
+        if not jira_email:
+            try:
+                jira_email = getattr(settings, "jira_email", None)
+            except Exception:
+                jira_email = None
 
-        jira_token = (
-            creds.get("api_token")
-            or creds.get("password")
-            or settings.jira_api_token
-        )
+        jira_token = creds.get("api_token") or creds.get("password")
+        if not jira_token:
+            try:
+                jira_token = getattr(settings, "jira_api_token", None)
+            except Exception:
+                jira_token = None
 
-        jira_url = (
-            creds.get("site_url")
-            or (self.config or {}).get("site_url")
-            or settings.jira_url
-        )
+        jira_url = creds.get("site_url") or (self.config or {}).get("site_url")
+        if not jira_url:
+            try:
+                jira_url = getattr(settings, "jira_url", None)
+            except Exception:
+                jira_url = None
 
         if jira_email and jira_token and jira_url:
+            if not jira_url.startswith(("http://", "https://")):
+                jira_url = f"https://{jira_url}"
             auth_str = f"{jira_email}:{jira_token}"
             encoded = base64.b64encode(auth_str.encode()).decode()
 
@@ -240,7 +245,7 @@ class JiraConnector(BaseConnector):
         """Pull issues updated in the last 24h (or since the given ISO time)."""
         api = self.api()
         # JQL: updated within the cursor (Jira's 'updated >=' is timezone aware)
-        cursor = since or "-1d"
+        cursor = since or "-365d"
         jql = f"updated >= '{cursor}' ORDER BY updated DESC"
         try:
             results = api.search(

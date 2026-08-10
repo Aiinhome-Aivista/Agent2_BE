@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
-IncidentStatus = Literal["new", "analyzing", "remediating", "resolved", "escalated", "closed"]
+IncidentStatus = Literal["new", "accepted", "analyzing", "remediating", "resolved", "escalated", "closed"]
 Priority = Literal["P1", "P2", "P3", "P4"]
 Severity = Literal["critical", "high", "medium", "low"]
 Source = Literal[
@@ -19,6 +19,7 @@ Source = Literal[
     "user_chat",
     "email",
     "webhook",
+    "gmail",
 ]
 StepType = Literal["observe", "reason", "plan", "act", "evaluate"]
 

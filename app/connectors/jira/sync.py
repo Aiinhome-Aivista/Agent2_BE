@@ -59,18 +59,15 @@ def upsert_from_jira_issue(connector_id: str, issue: Dict[str, Any]) -> str:
         }
 
         jira_status = translated.get("status")
-
-        # Jira resolved/closed should update local incident
-        if jira_status in ["resolved", "closed"]:
+        
+        # Always sync Jira status to local
+        if jira_status:
             update_fields["status"] = jira_status
-            update_fields["resolved_at"] = datetime.now()
+            if jira_status in ["resolved", "closed"]:
+                update_fields["resolved_at"] = datetime.now()
+            elif current_status in ["resolved", "closed"] and jira_status != "closed":
+                update_fields["resolved_at"] = None
 
-        # Jira reopened
-        elif current_status in ["resolved", "closed"] and jira_status == "new":
-            update_fields["status"] = "new"
-            update_fields["resolved_at"] = None
-
-        # Otherwise preserve AI workflow state
         IncidentRepository.update(incident_id, update_fields)
 
         _update_sync_state(
@@ -92,8 +89,11 @@ def upsert_from_jira_issue(connector_id: str, issue: Dict[str, Any]) -> str:
         "source": "jira",
         "priority": translated.get("priority", "P3"),
         "category": translated.get("category", "Uncategorised"),
-        "tags": translated.get("tags") or []
+        "tags": translated.get("tags") or [],
     }
+    if translated.get("status"):
+        payload["status"] = translated["status"]
+    
     incident_id = IncidentRepository.create(payload)
 
     _create_sync_state(

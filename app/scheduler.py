@@ -3,10 +3,9 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from app.core import logger
 from app.db.database import get_db
 from app.services.connector_service import ConnectorService
-from app.escalation_email_scheduler import (
-    process_pending_escalations,
-)
+
 from app.check_missed_slas_job import check_missed_slas
+from app.core.config import settings
 
 scheduler = BackgroundScheduler()
 
@@ -15,13 +14,6 @@ def auto_sync():
 
     logger.info("[scheduler] checking for connectors to sync...")
 
-    # process escalation emails
-    try:
-        process_pending_escalations()
-    except Exception as e:
-        logger.exception(
-            f"[scheduler] escalation email scheduler failed: {e}"
-        )
 
     with get_db() as conn:
         with conn.cursor(dictionary=True) as cur:
@@ -37,7 +29,7 @@ def auto_sync():
     connectors_to_sync = []
 
     for connector in connectors:
-        interval_sec = connector.get("poll_interval_sec", 120)
+        interval_sec = connector.get("poll_interval_sec") or settings.connector_default_poll_interval_sec
         last_synced = connector.get("last_synced_at")
 
         if last_synced is None:
@@ -94,7 +86,7 @@ def start_scheduler():
         scheduler.add_job(
             auto_sync,
             trigger="interval",
-            minutes=1,
+            minutes=settings.scheduler_interval_minutes,
             id="auto_sync_job",
             replace_existing=True
         )

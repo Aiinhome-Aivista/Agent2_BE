@@ -41,7 +41,7 @@ class ConnectorPublic(BaseModel):
 
 
 class ConnectorCreate(BaseModel):
-    provider: Literal["jira", "servicenow", "salesforce", "hubspot", "zoho"]
+    provider: Literal["jira", "servicenow", "salesforce", "hubspot", "zoho", "gmail"]
     name: str = Field(..., min_length=1, max_length=150)
     config: Dict[str, Any] = Field(default_factory=dict)
 

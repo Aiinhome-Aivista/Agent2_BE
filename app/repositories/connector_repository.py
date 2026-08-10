@@ -106,7 +106,7 @@ class ConnectorRepository:
 
     @staticmethod
     def touch_sync(connector_id: str, error: Optional[str] = None) -> None:
-        status_set = ", status = 'error'" if error else ""
+        status_set = ", status = 'error'" if error else ", status = 'connected'"
         with get_db() as conn:
             with conn.cursor() as cur:
                 cur.execute(

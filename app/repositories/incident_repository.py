@@ -4,7 +4,7 @@ import json
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
-from app.core.email_service import list_incident_emails
+
 from app.db import get_db
 
 
@@ -114,7 +114,43 @@ class IncidentRepository:
                     tuple(params + [page_size, offset]),
                 )
                 rows = cur.fetchall()
-        return [_hydrate(r) for r in rows], total
+
+        if not rows:
+            return [], total
+
+        # Fetch all steps for these incidents in one query
+        incident_ids = [r["id"] for r in rows]
+        format_strings = ','.join(['%s'] * len(incident_ids))
+        with get_db() as conn:
+            with conn.cursor(dictionary=True) as cur:
+                cur.execute(
+                    f"SELECT * FROM incident_steps WHERE incident_id IN ({format_strings}) ORDER BY timestamp ASC",
+                    tuple(incident_ids)
+                )
+                all_steps = cur.fetchall()
+        
+        steps_by_incident = {i_id: [] for i_id in incident_ids}
+        for step in all_steps:
+            if step.get("metadata"):
+                try:
+                    step["metadata"] = json.loads(step["metadata"])
+                except Exception:
+                    step["metadata"] = {}
+            else:
+                step["metadata"] = {}
+            steps_by_incident[step["incident_id"]].append(step)
+            
+        for r in rows:
+            if "tags" in r and isinstance(r["tags"], str):
+                try:
+                    r["tags"] = json.loads(r["tags"])
+                except Exception:
+                    r["tags"] = []
+            if not r.get("tags"):
+                r["tags"] = []
+            r["steps"] = steps_by_incident.get(r["id"], [])
+            
+        return rows, total
 
     # ---- update ----------------------------------------------------------------
     @staticmethod
@@ -186,10 +222,8 @@ def _hydrate(row: Dict[str, Any]) -> Dict[str, Any]:
         row["tags"] = []
     if row.get("id"):
         row["steps"] = IncidentRepository.get_steps(row["id"])
-        row["emails"] = list_incident_emails(row["id"])
     else:
         row["steps"] = []
-        row["emails"] = []
     return row
 
 

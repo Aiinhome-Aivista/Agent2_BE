@@ -12,6 +12,8 @@ from app.connectors.hubspot import HubSpotConnector
 from app.connectors.hubspot import META as HUBSPOT_META
 from app.connectors.jira import JiraConnector
 from app.connectors.jira import META as JIRA_META
+from app.connectors.gmail import META as GMAIL_META
+from app.connectors.gmail.connector import GmailConnector
 from app.connectors.salesforce import SalesforceConnector
 from app.connectors.salesforce import META as SALESFORCE_META
 from app.connectors.servicenow import ServiceNowConnector
@@ -22,6 +24,7 @@ from app.connectors.zoho import ZohoConnector
 
 _REGISTRY: Dict[str, Type[BaseConnector]] = {
     "jira": JiraConnector,
+    "gmail": GmailConnector,
     "servicenow": ServiceNowConnector,
     "salesforce": SalesforceConnector,
     "hubspot": HubSpotConnector,
@@ -30,6 +33,7 @@ _REGISTRY: Dict[str, Type[BaseConnector]] = {
 
 _META_REGISTRY: Dict[str, ConnectorMeta] = {
     "jira": JIRA_META,
+    "gmail": GMAIL_META,
     "servicenow": SERVICENOW_META,
     "salesforce": SALESFORCE_META,
     "hubspot": HUBSPOT_META,
@@ -39,6 +43,7 @@ _META_REGISTRY: Dict[str, ConnectorMeta] = {
 # Maturity tags shown in the UI so users know what they're getting.
 _MATURITY: Dict[str, str] = {
     "jira": "production",
+    "gmail": "production",
     "servicenow": "scaffold",
     "salesforce": "scaffold",
     "hubspot": "scaffold",

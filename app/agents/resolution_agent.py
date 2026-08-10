@@ -214,7 +214,10 @@ class ResolutionAgent(BaseAgent):
                 output="No matching runbook found. Escalation required.",
                 step_type="reason",
             )
-            return {"status": "escalated", "_needs_escalation": True}
+            patch = {"_needs_escalation": True}
+            if incident.get("source") != "jira":
+                patch["status"] = "escalated"
+            return patch
 
         runbook, score = match
 
@@ -231,7 +234,10 @@ class ResolutionAgent(BaseAgent):
                 step_type="plan",
                 metadata={"runbook_id": runbook["id"], "match_score": score},
             )
-            return {"status": "escalated", "_needs_escalation": True, "_matched_runbook": runbook["name"]}
+            patch = {"_needs_escalation": True, "_matched_runbook": runbook["name"]}
+            if incident.get("source") != "jira":
+                patch["status"] = "escalated"
+            return patch
 
         self.record_step(
             incident_id=incident["id"],
@@ -271,9 +277,11 @@ class ResolutionAgent(BaseAgent):
                 "_runbook_used": runbook["name"],
             }
 
-        return {
-            "status": "escalated",
+        patch = {
             "_needs_escalation": True,
             "_runbook_used": runbook["name"],
             "_failure_output": output,
         }
+        if incident.get("source") != "jira":
+            patch["status"] = "escalated"
+        return patch
