@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
-IncidentStatus = Literal["new", "accepted", "analyzing", "remediating", "resolved", "escalated", "closed"]
+IncidentStatus = Literal["new", "accepted", "analyzing", "remediating", "resolved", "escalated", "closed", "assigned", "rejected"]
 Priority = Literal["P1", "P2", "P3", "P4"]
 Severity = Literal["critical", "high", "medium", "low"]
 Source = Literal[
@@ -86,6 +86,8 @@ class Incident(IncidentBase):
     id: str
     status: IncidentStatus
     assigned_to: Optional[str] = Field(None, alias="assignedTo")
+    assigned_to_name: Optional[str] = Field(None, alias="assignedToName")
+    assignment_status: Optional[str] = Field(None, alias="assignmentStatus")
     sla_deadline: Optional[datetime] = Field(None, alias="slaDeadline")
     sla_breached: bool = Field(False, alias="slaBreached")
     auto_resolved: bool = Field(False, alias="autoResolved")

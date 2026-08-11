@@ -51,7 +51,8 @@ class TicketManagementService:
         # Update incident status to pending assignment
         IncidentRepository.update(incident_id, {
             "proposed_to": best_engineer["id"],
-            "assignment_status": "pending_approval"
+            "assignment_status": "pending_approval",
+            "status": "assigned"
         })
 
         # Add timeline step
@@ -77,7 +78,7 @@ class TicketManagementService:
                 cur.execute(
                     """
                     SELECT id FROM incidents
-                    WHERE assigned_to IS NULL AND status = 'new'
+                    WHERE assigned_to IS NULL AND assignment_status = 'unassigned' AND status = 'new'
                     """
                 )
                 unassigned_incidents = cur.fetchall()
@@ -102,7 +103,8 @@ class TicketManagementService:
             
             IncidentRepository.update(incident_id, {
                 "proposed_to": assigned_engineer["id"],
-                "assignment_status": "pending_approval"
+                "assignment_status": "pending_approval",
+                "status": "assigned"
             })
             
             IncidentRepository.add_step(incident_id, {

@@ -214,14 +214,10 @@ class ResolutionAgent(BaseAgent):
                 output="No matching runbook found. Escalation required.",
                 step_type="reason",
             )
-            patch = {"_needs_escalation": True}
-            if incident.get("source") != "jira":
-                patch["status"] = "escalated"
-            return patch
+            return {"_needs_escalation": True}
 
         runbook, score = match
 
-        # If confidence is below the configured threshold, don't auto-act.
         if score < settings.agent_auto_remediation_threshold * 0.7:  # softened threshold
             self.record_step(
                 incident_id=incident["id"],
@@ -234,10 +230,7 @@ class ResolutionAgent(BaseAgent):
                 step_type="plan",
                 metadata={"runbook_id": runbook["id"], "match_score": score},
             )
-            patch = {"_needs_escalation": True, "_matched_runbook": runbook["name"]}
-            if incident.get("source") != "jira":
-                patch["status"] = "escalated"
-            return patch
+            return {"_needs_escalation": True, "_matched_runbook": runbook["name"]}
 
         self.record_step(
             incident_id=incident["id"],
@@ -277,11 +270,8 @@ class ResolutionAgent(BaseAgent):
                 "_runbook_used": runbook["name"],
             }
 
-        patch = {
+        return {
             "_needs_escalation": True,
             "_runbook_used": runbook["name"],
             "_failure_output": output,
         }
-        if incident.get("source") != "jira":
-            patch["status"] = "escalated"
-        return patch

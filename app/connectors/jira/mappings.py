@@ -40,6 +40,7 @@ STATUS_FROM_JIRA = {
     "in progress": "analyzing",
     "blocked": "escalated",
     "done": "resolved",
+    "completed": "resolved",
     "closed": "closed",
     "resolved": "resolved",
 }
