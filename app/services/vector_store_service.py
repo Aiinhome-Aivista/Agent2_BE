@@ -26,3 +26,15 @@ class VectorStoreService:
             documents=[content],
             metadatas=[metadata]
         )
+
+    def search_similar(self, query: str, n_results: int = 5) -> list:
+        try:
+            results = self.collection.query(
+                query_texts=[query],
+                n_results=n_results
+            )
+            if results and "ids" in results and results["ids"]:
+                return results["ids"][0]
+            return []
+        except Exception:
+            return []

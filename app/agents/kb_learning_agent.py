@@ -120,6 +120,26 @@ class KBLearningAgent(BaseAgent):
             "kg_node_id": kg_node_id,
         })
 
+        referenced_ids = []
+        try:
+            from app.services.vector_store_service import VectorStoreService
+            vs = VectorStoreService()
+            query_str = f"{incident.get('subject', '')} {incident.get('description', '')}".strip()
+            if query_str:
+                referenced_ids = vs.search_similar(query_str, n_results=5)
+            
+            # Add the newly created article to VectorDB so future tickets can reference it
+            vs.add_document(
+                document_id=article_id,
+                content=self._draft_content(incident),
+                metadata={
+                    "title": f"Resolution: {incident.get('subject', 'Untitled')}",
+                    "category": incident.get("category", "General")
+                }
+            )
+        except Exception as e:
+            pass
+
         self.record_step(
             incident_id=incident["id"],
             action="Drafted new KB article",
@@ -133,6 +153,7 @@ class KBLearningAgent(BaseAgent):
                 "article_id": article_id,
                 "auto_published": settings.agent_kb_auto_publish,
                 "kg_node_id": kg_node_id,
+                "referenced_ticket_ids": referenced_ids,
             },
         )
         return {"_kb_article_id": article_id}
