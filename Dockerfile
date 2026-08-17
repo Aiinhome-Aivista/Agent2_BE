@@ -17,5 +17,5 @@ COPY . .
 EXPOSE 3020
 
 # Command to run the application
-# CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "3009"]
+# CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "3009"],
 CMD ["python", "main.py"]
