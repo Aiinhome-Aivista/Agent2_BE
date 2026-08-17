@@ -83,7 +83,7 @@ jobs:
             set -e
 
             echo "======================================"
-            echo "Starting Agent 1 deployment..."
+            echo "Starting Agent 2 deployment..."
             echo "======================================"
 
             # Login to GHCR
@@ -110,7 +110,7 @@ jobs:
               --name "${{ env.CONTAINER_NAME }}" \
               --restart unless-stopped \
               -p "${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }}" \
-              --env-file "/root/AGENT_2/Agent2_BE.env" \
+              --env-file "/root/AGENT_2/Agent2_BE/.env" \
               "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
 
             echo "Checking container status..."
@@ -118,7 +118,7 @@ jobs:
             docker ps --filter "name=${{ env.CONTAINER_NAME }}"
 
             echo "======================================"
-            echo "Agent 1 deployment completed successfully!"
+            echo "Agent 2 deployment completed successfully!"
             echo "======================================"
 
             docker image prune -f
