@@ -13,7 +13,7 @@ env:
   CONTAINER_NAME: agent2-be
   IMAGE_TAG: be_deployment
   HOST_PORT: 3020
-  CONTAINER_PORT: 5000
+  CONTAINER_PORT: 3020
 
 jobs:
 
