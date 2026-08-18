@@ -38,6 +38,7 @@ class Database:
                 charset="utf8mb4",
                 use_unicode=True,
                 autocommit=False,
+                time_zone="+05:30",
             )
             logger.info(
                 f"MySQL pool initialised — {settings.db_host}:{settings.db_port}/"
