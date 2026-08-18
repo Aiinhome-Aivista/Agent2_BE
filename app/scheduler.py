@@ -25,7 +25,7 @@ def auto_sync():
             """)
             connectors = cur.fetchall()
 
-    now = datetime.now()
+    now = datetime.utcnow() + timedelta(hours=5, minutes=30)
     connectors_to_sync = []
 
     for connector in connectors:
