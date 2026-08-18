@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
 IncidentStatus = Literal["new", "accepted", "analyzing", "remediating", "resolved", "escalated", "closed", "assigned", "rejected"]
 Priority = Literal["P1", "P2", "P3", "P4"]
@@ -49,7 +49,7 @@ class IncidentBase(BaseModel):
     subject: str
     description: str
     caller: str
-    caller_email: Optional[EmailStr] = Field(None, alias="callerEmail")
+    caller_email: Optional[str] = Field(None, alias="callerEmail")
     source: Source = "user_chat"
     category: str = "Uncategorised"
     subcategory: Optional[str] = None
@@ -66,7 +66,7 @@ class IncidentCreate(BaseModel):
     subject: str = Field(..., min_length=5, max_length=200)
     description: str = Field(..., min_length=10, max_length=5000)
     caller: str = Field(..., min_length=2, max_length=100)
-    caller_email: Optional[EmailStr] = Field(None, alias="callerEmail")
+    caller_email: Optional[str] = Field(None, alias="callerEmail")
     source: Source = "user_chat"
     category: Optional[str] = None
     priority: Optional[Priority] = None
