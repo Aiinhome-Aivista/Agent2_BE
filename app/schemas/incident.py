@@ -87,6 +87,7 @@ class Incident(IncidentBase):
     status: IncidentStatus
     assigned_to: Optional[str] = Field(None, alias="assignedTo")
     assigned_to_name: Optional[str] = Field(None, alias="assignedToName")
+    assigned_to_role: Optional[str] = Field(None)
     assignment_status: Optional[str] = Field(None, alias="assignmentStatus")
     sla_deadline: Optional[datetime] = Field(None, alias="slaDeadline")
     sla_breached: bool = Field(False, alias="slaBreached")
