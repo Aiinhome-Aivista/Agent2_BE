@@ -2,7 +2,7 @@
 `incident_steps` tables."""
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.db import get_db
@@ -13,7 +13,7 @@ class IncidentRepository:
     @staticmethod
     def create(payload: Dict[str, Any]) -> str:
         new_id = payload.get("id") or f"INC-{uuid.uuid4().hex[:10].upper()}"
-        now = datetime.now()
+        now = datetime.utcnow() + timedelta(hours=5, minutes=30)
         with get_db() as conn:
             with conn.cursor() as cur:
                 cur.execute(
@@ -174,7 +174,7 @@ class IncidentRepository:
             fields["tags"] = json.dumps(fields["tags"])
         if "category" in fields and not fields["category"]:
             fields["category"] = "Uncategorised"
-        fields["updated_at"] = datetime.now()
+        fields["updated_at"] = datetime.utcnow() + timedelta(hours=5, minutes=30)
 
         cols = ", ".join(f"{k} = %s" for k in fields.keys())
         values = list(fields.values()) + [incident_id]
@@ -203,7 +203,7 @@ class IncidentRepository:
                         step["output"],
                         step["type"],
                         json.dumps(step.get("metadata", {})),
-                        step.get("timestamp", datetime.now()),
+                        step.get("timestamp", datetime.utcnow() + timedelta(hours=5, minutes=30)),
                     ),
                 )
             conn.commit()

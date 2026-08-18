@@ -11,7 +11,7 @@ Conflict policy (last-write-wins by `updated_at`):
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from app.connectors.base.connector import IncidentPayload
@@ -68,7 +68,7 @@ def upsert_from_jira_issue(connector_id: str, issue: Dict[str, Any]) -> str:
         if jira_status:
             update_fields["status"] = jira_status
             if jira_status in ["resolved", "closed"]:
-                update_fields["resolved_at"] = datetime.now()
+                update_fields["resolved_at"] = datetime.utcnow() + timedelta(hours=5, minutes=30)
             elif current_status in ["resolved", "closed"] and jira_status != "closed":
                 update_fields["resolved_at"] = None
 
@@ -76,7 +76,7 @@ def upsert_from_jira_issue(connector_id: str, issue: Dict[str, Any]) -> str:
 
         _update_sync_state(
             link["id"],
-            external_updated_at=datetime.now(),
+            external_updated_at=datetime.utcnow() + timedelta(hours=5, minutes=30),
             sync_status="synced"
         )
 
@@ -190,7 +190,7 @@ def push_incident_update(api: JiraApiClient, connector_id: str, incident: Dict[s
                 if t["name"].lower() == target.lower():
                     api.transition_issue(link["external_id"], t["id"])
                     break
-    _update_sync_state(link["id"], internal_updated_at=datetime.now(), sync_status="synced")
+    _update_sync_state(link["id"], internal_updated_at=datetime.utcnow() + timedelta(hours=5, minutes=30), sync_status="synced")
     return True
 
 
