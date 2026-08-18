@@ -64,10 +64,12 @@ class IncidentRepository:
                 cur.execute("SELECT * FROM incidents WHERE id = %s LIMIT 1", (incident_id,))
                 row = cur.fetchone()
                 if row:
-                    cur.execute("SELECT id, full_name FROM users")
-                    engineers = {r["id"]: r["full_name"] for r in cur.fetchall()}
+                    cur.execute("SELECT id, full_name, job_title FROM users")
+                    engineers = {r["id"]: {"name": r["full_name"], "job_title": r.get("job_title")} for r in cur.fetchall()}
                     eng_id = row.get("assigned_to") or row.get("proposed_to")
-                    row["assigned_to_name"] = engineers.get(eng_id)
+                    eng = engineers.get(eng_id, {})
+                    row["assigned_to_name"] = eng.get("name")
+                    row["assigned_to_role"] = eng.get("job_title")
         return _hydrate(row) if row else None
 
     @staticmethod
@@ -147,8 +149,8 @@ class IncidentRepository:
             
         with get_db() as conn:
             with conn.cursor(dictionary=True) as cur:
-                cur.execute("SELECT id, full_name FROM users")
-                engineers = {r["id"]: r["full_name"] for r in cur.fetchall()}
+                cur.execute("SELECT id, full_name, job_title FROM users")
+                engineers = {r["id"]: {"name": r["full_name"], "job_title": r.get("job_title")} for r in cur.fetchall()}
             
         for r in rows:
             if "tags" in r and isinstance(r["tags"], str):
@@ -161,7 +163,9 @@ class IncidentRepository:
             r["steps"] = steps_by_incident.get(r["id"], [])
             
             eng_id = r.get("assigned_to") or r.get("proposed_to")
-            r["assigned_to_name"] = engineers.get(eng_id)
+            eng = engineers.get(eng_id, {})
+            r["assigned_to_name"] = eng.get("name")
+            r["assigned_to_role"] = eng.get("job_title")
             
         return rows, total
 
