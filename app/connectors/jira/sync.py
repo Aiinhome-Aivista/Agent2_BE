@@ -53,10 +53,14 @@ def upsert_from_jira_issue(connector_id: str, issue: Dict[str, Any]) -> str:
             "subject": translated["subject"],
             "description": translated["description"],
             "priority": translated["priority"],
-            "category": translated["category"],
             "tags": translated.get("tags") or [],
             "source": "jira",
         }
+
+        # Avoid overwriting AI-triaged categories with generic Jira issue types
+        generic_jira_types = ["Feature", "Bug", "Task", "Story", "Epic", "Incident", "Uncategorised"]
+        if translated.get("category") not in generic_jira_types:
+            update_fields["category"] = translated["category"]
 
         jira_status = translated.get("status")
         
